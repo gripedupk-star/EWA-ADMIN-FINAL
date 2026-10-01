@@ -5,5 +5,5 @@ android { namespace 'com.ewa.admin'; compileSdk 35
 }
 
 dependencies {
-    implementation 'androidx.core:core:1.17.0'
+  implementation 'androidx.core:core:1.15.0'
 }
