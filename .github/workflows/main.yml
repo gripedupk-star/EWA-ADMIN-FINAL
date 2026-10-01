@@ -1,0 +1,185 @@
+name: Build EWA Admin APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build EWA Admin v0.7.2
+    runs-on: ubuntu-24.04
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # Use Android SDK already installed on GitHub runner
+      - name: Configure Android SDK
+        shell: bash
+        run: |
+          set -e
+
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --version
+
+      - name: Install Android SDK 35
+        shell: bash
+        run: |
+          set -e
+
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+
+          "$SDKMANAGER" \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
+
+          echo "Android SDK 35 ready."
+
+      # Verify exact repository structure
+      - name: Verify Android project
+        shell: bash
+        run: |
+          set -e
+
+          echo "===== EWA ADMIN PROJECT ====="
+
+          test -d android-admin || {
+            echo "ERROR: android-admin folder missing."
+            exit 1
+          }
+
+          test -f android-admin/settings.gradle || {
+            echo "ERROR: android-admin/settings.gradle missing."
+            exit 1
+          }
+
+          test -f android-admin/build.gradle || {
+            echo "ERROR: android-admin/build.gradle missing."
+            exit 1
+          }
+
+          test -f android-admin/gradle.properties || {
+            echo "ERROR: android-admin/gradle.properties missing."
+            exit 1
+          }
+
+          test -f android-admin/app/build.gradle || {
+            echo "ERROR: android-admin/app/build.gradle missing."
+            exit 1
+          }
+
+          echo "Android project structure OK."
+
+      # Install Gradle
+      - name: Set up Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Verify build environment
+        shell: bash
+        run: |
+          set -e
+
+          echo "===== JAVA ====="
+          java -version
+
+          echo ""
+          echo "===== GRADLE ====="
+          gradle --version
+
+          echo ""
+          echo "===== ANDROID SDK ====="
+          echo "$ANDROID_HOME"
+
+          test -d "$ANDROID_HOME/platforms/android-35" || {
+            echo "ERROR: Android Platform 35 missing."
+            exit 1
+          }
+
+          test -d "$ANDROID_HOME/build-tools/35.0.0" || {
+            echo "ERROR: Build Tools 35.0.0 missing."
+            exit 1
+          }
+
+          echo "Environment OK."
+
+      # Check Gradle project before full build
+      - name: Validate Gradle project
+        working-directory: android-admin
+        shell: bash
+        run: |
+          set -e
+          gradle projects --no-daemon --stacktrace
+
+      # Build APK
+      - name: Build Debug APK
+        working-directory: android-admin
+        shell: bash
+        run: |
+          set -e
+          gradle clean assembleDebug \
+            --no-daemon \
+            --stacktrace
+
+      # Verify output
+      - name: Verify APK
+        shell: bash
+        run: |
+          set -e
+
+          APK="android-admin/app/build/outputs/apk/debug/app-debug.apk"
+
+          if [ ! -f "$APK" ]; then
+            echo "ERROR: APK was not generated."
+            echo "Searching for APK files..."
+            find . -type f -name "*.apk" -print
+            exit 1
+          fi
+
+          echo "=============================="
+          echo "APK BUILD SUCCESSFUL"
+          echo "=============================="
+
+          ls -lh "$APK"
+
+      # Rename final APK
+      - name: Prepare final APK
+        shell: bash
+        run: |
+          set -e
+
+          mkdir -p release
+
+          cp \
+            android-admin/app/build/outputs/apk/debug/app-debug.apk \
+            release/EWA-Admin-v0.7.2.apk
+
+          ls -lh release/EWA-Admin-v0.7.2.apk
+
+      # Make APK downloadable from GitHub Actions
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: EWA-Admin-v0.7.2-APK
+          path: release/EWA-Admin-v0.7.2.apk
+          if-no-files-found: error
+          retention-days: 30
