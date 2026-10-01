@@ -1,0 +1,9 @@
+plugins { id 'com.android.application' }
+
+android { namespace 'com.ewa.admin'; compileSdk 35
+    defaultConfig { applicationId 'com.ewa.admin'; minSdk 26; targetSdk 35; versionCode 15; versionName '0.7.2' }
+}
+
+dependencies {
+    implementation 'androidx.core:core:1.17.0'
+}

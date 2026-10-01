@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:padding="24dp" android:layout_width="match_parent" android:layout_height="match_parent">
+    <TextView android:id="@+id/title" android:text="EWA Admin" android:textSize="28sp" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    <TextView android:id="@+id/status" android:text="" android:layout_marginTop="8dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+    <EditText android:id="@+id/baseUrl" android:hint="WordPress URL, e.g. https://example.com" android:inputType="textUri" android:layout_width="match_parent" android:layout_height="wrap_content" />
+    <EditText android:id="@+id/username" android:hint="Administrator username" android:layout_width="match_parent" android:layout_height="wrap_content" />
+    <EditText android:id="@+id/password" android:hint="Password" android:inputType="textPassword" android:layout_width="match_parent" android:layout_height="wrap_content" />
+    <Button android:id="@+id/login" android:text="Sign in" android:layout_width="match_parent" android:layout_height="wrap_content" />
+    <Button android:id="@+id/refresh" android:text="Refresh WhatsApp Queue" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" />
+    <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="12dp">
+        <LinearLayout android:id="@+id/queue" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content" />
+    </ScrollView>
+</LinearLayout>
